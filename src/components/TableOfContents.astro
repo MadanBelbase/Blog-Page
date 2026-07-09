@@ -1,0 +1,34 @@
+---
+interface Heading {
+  depth: number;
+  slug: string;
+  text: string;
+}
+
+interface Props {
+  headings: Heading[];
+}
+
+const { headings } = Astro.props;
+
+// Filter out h1 and deep headers, keeping h2 and h3
+const filteredHeadings = headings.filter((h) => h.depth > 1 && h.depth < 4);
+---
+
+{filteredHeadings.length > 0 && (
+  <nav class="toc my-8 p-4 bg-[var(--code-bg)] border border-[var(--border-color)] rounded-lg text-sm max-w-xl">
+    <p class="font-bold mb-2 text-[var(--text-color)] text-xs uppercase tracking-wider">Table of Contents</p>
+    <ul class="space-y-1.5 list-none pl-0">
+      {filteredHeadings.map((heading) => (
+        <li class={heading.depth === 3 ? "pl-4 text-xs" : "text-sm"}>
+          <a
+            href={`#${heading.slug}`}
+            class="text-[var(--text-secondary)] hover:text-[var(--accent-color)] transition-colors no-underline border-b border-transparent"
+          >
+            {heading.text}
+          </a>
+        </li>
+      ))}
+    </ul>
+  </nav>
+)}

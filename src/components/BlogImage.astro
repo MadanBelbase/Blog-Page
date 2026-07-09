@@ -4,8 +4,8 @@ const { src, alt, width = 800 } = Astro.props;
 ---
 
 <figure class="my-6 flex flex-col items-center">
-  <Image src={src} alt={alt} width={width} class="rounded-xl shadow-md max-w-full h-auto" />
-  {alt && <figcaption class="text-center text-sm text-gray-600 mt-3">{alt}</figcaption>}
+  <Image src={src} alt={alt} width={width} class="rounded-xl border border-[var(--border-color)] max-w-full h-auto" />
+  {alt && <figcaption class="text-center text-sm text-[var(--text-secondary)] mt-3">{alt}</figcaption>}
 </figure>
 
 

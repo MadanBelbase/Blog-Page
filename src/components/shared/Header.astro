@@ -1,87 +1,137 @@
 ---
-import '../../styles/global.css'
 const navLinks = [
-  { name: "Home", href: "/", icon: "🏠" },
-  { name: "Blog", href: "/blog/", icon: "📝" },
-  { name: "About", href: "/about/", icon: "👋" },
+  { name: "Home", href: "/" },
+  { name: "Blog", href: "/blog/" },
+  { name: "Notes", href: "/notes/" },
+  { name: "Projects", href: "/projects/" },
+  { name: "Research", href: "/research/" },
+  { name: "Bookmarks", href: "/bookmarks/" },
+  { name: "About", href: "/about/" },
 ];
-import profile from '../../assets/profile.jpeg';
 ---
 
-<header class="sticky top-0 z-50 w-full border-b border-gray-100 bg-white">
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="flex justify-between items-center h-16">
-      
-      <!-- Logo / Site Name -->
-      <a href="/" class="flex items-center space-x-3 group">
-        <img 
-          src={profile.src} 
-          alt="Madan Belbase" 
-          class="h-9 w-9 rounded-full border border-gray-100 object-cover"
-          width="36"
-          height="36"
-        />
-        <span class="text-xl font-bold tracking-tight text-gray-900 group-hover:text-indigo-600 transition-colors">
-          Madan Belbase
-        </span>
-      </a>
+<header class="mb-10 border-b border-[var(--border-color)] pb-6 pt-4">
+  <div
+    class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+  >
+    <!-- Brand / Name -->
+    <a
+      href="/"
+      class="text-lg font-bold tracking-tight hover:text-[var(--accent-color)] transition-colors"
+    >
+      Madan Belbase
+    </a>
 
-      <!-- Desktop Nav -->
-      <nav class="hidden md:flex items-center space-x-1">
-        {navLinks.map(link => (
-          <a 
-            href={link.href} 
-            class="px-4 py-2 text-sm font-bold text-gray-500 hover:text-indigo-600 rounded-lg transition-colors hover:bg-gray-50"
-          >
-            {link.name}
-          </a>
-        ))}
-        <div class="h-4 w-px bg-gray-100 mx-2"></div>
-        <a 
-          href="https://github.com/madanbelbase" 
-          target="_blank" 
-          rel="noopener noreferrer"
-          class="p-2 text-gray-400 hover:text-gray-900 transition-colors"
-          aria-label="GitHub"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
-          </svg>
-        </a>
-      </nav>
+    <!-- Nav List -->
+    <nav
+      class="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-[var(--text-secondary)]"
+    >
+      {
+        navLinks.map((link) => {
+          // Simple active link check
+          const isActive =
+            Astro.url.pathname === link.href ||
+            Astro.url.pathname.startsWith(link.href + "/");
+          const isHomeActive = link.href === "/" && Astro.url.pathname === "/";
+          const active = link.href === "/" ? isHomeActive : isActive;
 
-      <!-- Mobile Menu Button -->
-      <button 
-        id="menu-btn" 
-        class="md:hidden p-2 rounded-lg text-gray-500 hover:text-indigo-600 hover:bg-gray-50 transition-colors"
-        aria-label="Toggle Menu"
-        onclick="document.getElementById('mobile-menu').classList.toggle('hidden')"
+          return (
+            <a
+              href={link.href}
+              class={`hover:text-[var(--text-color)] transition-colors ${active ? "text-[var(--text-color)] font-semibold border-b border-[var(--text-color)]" : ""}`}
+            >
+              {link.name}
+            </a>
+          );
+        })
+      }
+
+      <!-- Theme Toggle Button -->
+      <button
+        id="theme-toggle"
+        class="ml-2 p-1 text-[var(--text-secondary)] hover:text-[var(--text-color)] cursor-pointer focus:outline-none"
+        aria-label="Toggle Dark Mode"
       >
-        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+        <!-- Light Mode Icon (Sun) -->
+        <svg
+          id="theme-toggle-light-icon"
+          class="hidden w-4 h-4"
+          fill="currentColor"
+          viewBox="0 0 20 20"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 14.536a1 1 0 011.414 0l.707.707a1 1 0 11-1.414 1.414l-.707-.707a1 1 0 010-1.414zm2.12-10.607a1 1 0 011.414 0l.707.707a1 1 0 11-1.414 1.414l-.707-.707a1 1 0 010-1.414zM4 11a1 1 0 100-2H3a1 1 0 100 2h1z"
+            fill-rule="evenodd"
+            clip-rule="evenodd"></path>
+        </svg>
+        <!-- Dark Mode Icon (Moon) -->
+        <svg
+          id="theme-toggle-dark-icon"
+          class="hidden w-4 h-4"
+          fill="currentColor"
+          viewBox="0 0 20 20"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"
+          ></path>
         </svg>
       </button>
-    </div>
-  </div>
-
-  <!-- Mobile Nav -->
-  <div id="mobile-menu" class="hidden md:hidden bg-white border-t border-gray-100 shadow-xl">
-    <div class="px-4 py-4 space-y-1">
-      {navLinks.map(link => (
-        <a 
-          href={link.href} 
-          class="block px-4 py-3 text-base font-bold text-gray-700 hover:text-indigo-600 hover:bg-gray-50 rounded-xl"
-        >
-          {link.name}
-        </a>
-      ))}
-    </div>
+    </nav>
   </div>
 </header>
 
-<style is:global>
-  /* Minimal active link styling */
-  a[href="${new URL(Astro.request.url).pathname}"] {
-    color: #4f46e5;
+<script>
+  // Function to setup theme toggle listener
+  function setupThemeToggle() {
+    const themeToggleLightIcon = document.getElementById(
+      "theme-toggle-light-icon",
+    );
+    const themeToggleDarkIcon = document.getElementById(
+      "theme-toggle-dark-icon",
+    );
+    const themeToggleBtn = document.getElementById("theme-toggle");
+
+    if (!themeToggleBtn) return;
+
+    // Reset visibility
+    themeToggleLightIcon?.classList.add("hidden");
+    themeToggleDarkIcon?.classList.add("hidden");
+
+    if (document.documentElement.classList.contains("dark")) {
+      themeToggleLightIcon?.classList.remove("hidden");
+    } else {
+      themeToggleDarkIcon?.classList.remove("hidden");
+    }
+
+    // Remove any previous listener by cloning (if re-run on page transitions)
+    const newBtn = themeToggleBtn.cloneNode(true) as HTMLButtonElement;
+    themeToggleBtn.parentNode?.replaceChild(newBtn, themeToggleBtn);
+
+    newBtn.addEventListener("click", function () {
+      const isDark = document.documentElement.classList.contains("dark");
+
+      const newLightIcon = document.getElementById("theme-toggle-light-icon");
+      const newDarkIcon = document.getElementById("theme-toggle-dark-icon");
+
+      if (isDark) {
+        document.documentElement.classList.remove("dark");
+        localStorage.setItem("theme", "light");
+        newLightIcon?.classList.add("hidden");
+        newDarkIcon?.classList.remove("hidden");
+      } else {
+        document.documentElement.classList.add("dark");
+        localStorage.setItem("theme", "dark");
+        newDarkIcon?.classList.add("hidden");
+        newLightIcon?.classList.remove("hidden");
+      }
+    });
   }
-</style>
+
+  // Run on load
+  setupThemeToggle();
+
+  // Run on view transitions if enabled
+  document.addEventListener("astro:after-swap", setupThemeToggle);
+</script>

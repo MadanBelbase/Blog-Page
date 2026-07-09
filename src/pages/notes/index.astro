@@ -1,0 +1,131 @@
+---
+import { getCollection } from 'astro:content';
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/shared/Header.astro';
+import Footer from '../../components/shared/Footer.astro';
+
+const notes = await getCollection('notes', ({ data }) => !data.draft);
+const sortedNotes = notes.sort((a, b) => 
+  new Date(b.data.pubDate).getTime() - new Date(a.data.pubDate).getTime()
+);
+
+// Extract all unique topics
+const allTopics = Array.from(
+  new Set(sortedNotes.flatMap(note => note.data.topics || []))
+).sort();
+---
+
+<Layout title="Notes - Madan Belbase" description="Short technical notes on Machine Learning, Computer Vision, Python, React, and Open Source.">
+  <Header />
+
+  <main class="space-y-10">
+    <div class="border-b border-[var(--border-color)] pb-4">
+      <h1 class="text-3xl font-extrabold tracking-tight text-[var(--text-color)]">Technical Notes</h1>
+      <p class="text-[var(--text-secondary)] mt-2 text-lg">Short, focused logs and technical findings.</p>
+    </div>
+
+    <!-- Topics Filter -->
+    {allTopics.length > 0 && (
+      <div class="flex flex-wrap gap-2 py-2 items-center">
+        <span class="text-sm font-semibold text-[var(--text-secondary)] mr-2">Topics:</span>
+        <button
+          class="topic-badge text-xs bg-[var(--accent-color)] text-white px-2.5 py-1 rounded border border-[var(--accent-color)] transition-colors cursor-pointer"
+          data-topic="all"
+        >
+          All Notes
+        </button>
+        {allTopics.map(topic => (
+          <button
+            class="topic-badge text-xs bg-[var(--code-bg)] hover:bg-[var(--border-color)] text-[var(--text-secondary)] hover:text-[var(--text-color)] px-2.5 py-1 rounded border border-[var(--border-color)] transition-colors cursor-pointer"
+            data-topic={topic}
+          >
+            {topic}
+          </button>
+        ))}
+      </div>
+    )}
+
+    <!-- Notes List -->
+    <div class="space-y-8" id="notes-container">
+      {sortedNotes.map(note => {
+        const formattedDate = new Date(note.data.pubDate).toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'short',
+          day: 'numeric'
+        });
+        
+        return (
+          <article 
+            class="space-y-2 note-card border-b border-[var(--border-color)] pb-6 last:border-b-0"
+            data-topics={JSON.stringify(note.data.topics || [])}
+          >
+            <div class="flex items-center justify-between text-sm text-[var(--text-secondary)]">
+              <time datetime={note.data.pubDate.toString()}>{formattedDate}</time>
+            </div>
+            
+            <h2 class="text-xl font-bold tracking-tight">
+              <a href={`/notes/${note.slug}/`} class="list-link">{note.data.title}</a>
+            </h2>
+            
+            {note.data.description && (
+              <p class="text-sm text-[var(--text-secondary)] leading-relaxed">{note.data.description}</p>
+            )}
+            
+            {note.data.topics && note.data.topics.length > 0 && (
+              <div class="flex flex-wrap gap-1.5 pt-1">
+                {note.data.topics.map(topic => (
+                  <span class="text-xs bg-[var(--code-bg)] text-[var(--text-secondary)] px-1.5 py-0.5 rounded border border-[var(--border-color)]">
+                    {topic}
+                  </span>
+                ))}
+              </div>
+            )}
+          </article>
+        );
+      })}
+    </div>
+  </main>
+
+  <Footer />
+
+  <script>
+    function setupTopicFilters() {
+      const badges = document.querySelectorAll('.topic-badge');
+      const notes = document.querySelectorAll('.note-card');
+
+      badges.forEach(badge => {
+        badge.addEventListener('click', () => {
+          const selectedTopic = badge.getAttribute('data-topic');
+          
+          badges.forEach(b => {
+            b.classList.remove('bg-[var(--accent-color)]', 'text-white');
+            b.classList.add('bg-[var(--code-bg)]', 'text-[var(--text-secondary)]');
+            // Remove border colors override
+            b.classList.remove('border-[var(--accent-color)]');
+            b.classList.add('border-[var(--border-color)]');
+          });
+          
+          badge.classList.remove('bg-[var(--code-bg)]', 'text-[var(--text-secondary)]', 'border-[var(--border-color)]');
+          badge.classList.add('bg-[var(--accent-color)]', 'text-white', 'border-[var(--accent-color)]');
+
+          notes.forEach(note => {
+            if (selectedTopic === 'all') {
+              (note as HTMLElement).style.display = 'block';
+              return;
+            }
+
+            const noteTopics = JSON.parse(note.getAttribute('data-topics') || '[]');
+            if (noteTopics.includes(selectedTopic)) {
+              (note as HTMLElement).style.display = 'block';
+            } else {
+              (note as HTMLElement).style.display = 'none';
+            }
+          });
+        });
+      });
+    }
+
+    setupTopicFilters();
+    document.addEventListener('astro:after-swap', setupTopicFilters);
+  </script>
+</Layout>

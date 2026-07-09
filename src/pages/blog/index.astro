@@ -1,59 +1,92 @@
 ---
-// src/pages/blog/index.astro
-import BaseLayout from '../../layouts/BlogLayout.astro';
 import { getCollection } from 'astro:content';
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/shared/Header.astro';
+import Footer from '../../components/shared/Footer.astro';
 
-const posts = await getCollection('blog');
+const posts = await getCollection('blog', ({ data }) => !data.draft);
 const sortedPosts = posts.sort((a, b) => 
   new Date(b.data.pubDate).getTime() - new Date(a.data.pubDate).getTime()
 );
 
-const getRelativeTime = (date: string | Date): string => {
-  try {
-    const now = new Date();
-    const diffMs = now.getTime() - new Date(date).getTime();
-    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-    if (diffDays === 0) return 'Today';
-    if (diffDays === 1) return 'Yesterday';
-    if (diffDays < 7) return `${diffDays} days ago`;
-    return new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).format(new Date(date));
-  } catch {
-    return 'Unknown date';
-  }
-};
+const PAGE_SIZE = 5;
+const pagePosts = sortedPosts.slice(0, PAGE_SIZE);
+const totalPages = Math.ceil(sortedPosts.length / PAGE_SIZE);
+
+// Reading time helper
+function getReadingTime(body: string) {
+  const wpm = 200;
+  const words = body.trim().split(/\s+/).length;
+  return `${Math.ceil(words / wpm)} min read`;
+}
 ---
 
-<BaseLayout title="Madan Belbase" description="Thoughts, tutorials, and insights on software engineering.">
-  <div class="max-w-3xl mx-auto px-4 sm:px-6 py-20">
-    
-    <header class="mb-20">
-      <h1 class="text-4xl font-black text-gray-900 tracking-tight mb-4">
-        Archive
-      </h1>
-      <p class="text-lg text-gray-500 leading-relaxed">
-        Personal thoughts, tutorials, and technical insights.
-      </p>
-    </header>
+<Layout title="Blog - Madan Belbase" description="Writing and essays on Machine Learning, Computer Vision, software, and technology.">
+  <Header />
 
-    <div class="space-y-16">
-      {sortedPosts.map(post => (
-        <article class="group">
-          <time class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 block">
-            {getRelativeTime(post.data.pubDate)}
-          </time>
-          <h2 class="text-2xl font-bold text-gray-900 group-hover:text-indigo-600 transition-colors mb-3">
-            <a href={`/blog/${post.slug}/`}>
-              {post.data.title}
-            </a>
-          </h2>
-          <p class="text-gray-500 text-sm line-clamp-2 mb-4 leading-relaxed">
-            {post.data.description}
-          </p>
-          <a href={`/blog/${post.slug}/`} class="text-xs font-black uppercase tracking-widest text-gray-900 flex items-center gap-1 hover:text-indigo-600 transition-colors">
-            Read Story <span>→</span>
-          </a>
-        </article>
-      ))}
+  <main class="space-y-10">
+    <div class="border-b border-[var(--border-color)] pb-4">
+      <h1 class="text-3xl font-extrabold tracking-tight text-[var(--text-color)]">Blog</h1>
+      <p class="text-[var(--text-secondary)] mt-2 text-lg">Writing, guides, and technical essays.</p>
     </div>
-  </div>
-</BaseLayout>
+
+    <!-- Blog Posts List -->
+    <div class="space-y-12">
+      {pagePosts.map(post => {
+        const formattedDate = new Date(post.data.pubDate).toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'short',
+          day: 'numeric'
+        });
+        const readingTime = getReadingTime(post.body);
+        return (
+          <article class="space-y-2">
+            <div class="flex items-center gap-2 text-sm text-[var(--text-secondary)]">
+              <time datetime={post.data.pubDate.toString()}>{formattedDate}</time>
+              <span>&bull;</span>
+              <span>{readingTime}</span>
+            </div>
+            
+            <h2 class="text-2xl font-bold tracking-tight">
+              <a href={`/blog/${post.slug}/`} class="list-link">{post.data.title}</a>
+            </h2>
+            
+            <p class="text-[var(--text-secondary)] leading-relaxed mt-1 text-sm">{post.data.description}</p>
+            
+            <div class="flex flex-wrap gap-2 pt-2">
+              {post.data.categories && post.data.categories.map(cat => (
+                <span class="text-xs bg-[var(--code-bg)] text-[var(--text-secondary)] px-2 py-0.5 rounded border border-[var(--border-color)]">
+                  {cat}
+                </span>
+              ))}
+              {post.data.tags && post.data.tags.map(tag => (
+                <span class="text-xs bg-[var(--code-bg)] text-[var(--text-secondary)] px-2 py-0.5 rounded border border-[var(--border-color)] italic">
+                  #{tag}
+                </span>
+              ))}
+            </div>
+          </article>
+        );
+      })}
+    </div>
+
+    <!-- Pagination -->
+    {totalPages > 1 && (
+      <nav class="flex items-center justify-between border-t border-[var(--border-color)] pt-6">
+        <span class="text-sm text-[var(--text-secondary)]">
+          Page 1 of {totalPages}
+        </span>
+        <div class="flex gap-2">
+          <a
+            href="/blog/2/"
+            class="text-sm font-medium text-[var(--accent-color)] hover:underline"
+          >
+            Next Page &rarr;
+          </a>
+        </div>
+      </nav>
+    )}
+  </main>
+
+  <Footer />
+</Layout>

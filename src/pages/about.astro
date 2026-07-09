@@ -1,144 +1,25 @@
 ---
-// src/pages/about.astro
-import BaseLayout from '../layouts/Layout.astro';
-import '../styles/global.css';
+import Layout from '../layouts/Layout.astro';
 import Header from '../components/shared/Header.astro';
 import Footer from '../components/shared/Footer.astro';
-import profile from '../assets/profile.jpeg'
 ---
 
-<BaseLayout title="Madan Belbase">
-  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2935284525797601"
-     crossorigin="anonymous"></script>
+<Layout title="About - Madan Belbase">
   <Header />
-  <main class="max-w-3xl mx-auto px-5 py-12 font-sans text-black space-y-20">
-    <!-- Hero Section -->
-    <section class="text-center space-y-8">
-      <div class="relative inline-block">
-        <img 
-          src={profile.src} 
-          alt="Madan Belbase" 
-          class="w-40 h-40 mx-auto rounded-full object-cover"
-          width="160"
-          height="160"
-        />
-      </div>
-      <div class="space-y-4">
-        <h1 class="text-4xl md:text-5xl font-bold">
-          About Me
-        </h1>
-        <p class="text-lg max-w-2xl mx-auto leading-relaxed">
-          Hi, I'm <span class="font-semibold ">Madan Belbase</span> — 
-          a passionate Fullstack Developer and Computer Engineering student from 
-          Kathmandu, Nepal.
-        </p>
-      </div>
-    </section>
 
-    <!-- Story -->
-    <section class="space-y-6">
-      <h2 class="text-3xl font-bold">
-        My Journey
-      </h2>
-      <div class="space-y-5 leading-relaxed">
-        <p>
-          My journey into technology began with curiosity for how software shapes 
-          the world. Over time, this curiosity evolved into a strong interest in 
-          web development, problem-solving, and creating tools that make life easier. 
-        </p>
-        <p>
-          Currently, I'm pursuing my <span class="font-medium">Bachelor's in Computer Engineering</span> 
-          at Nepal College of Information Technology (NCIT). Alongside academics, 
-          I actively participate in tech communities, hackathons, and learning 
-          challenges to sharpen my skills.
-        </p>
-      </div>
-    </section>
-
-    <!-- What I Do -->
-    <section class="space-y-6">
-      <h2 class="text-3xl font-bold">
-        What I Do
-      </h2>
-      <div class="grid md:grid-cols-2 gap-8">
-        <div class="space-y-4">
-          <h3 class="font-bold text-lg flex items-center gap-2">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path>
-            </svg>
-            Development
-          </h3>
-          <ul class="space-y-3">
-            <li class="flex items-start gap-2">
-              <span>•</span>
-              Full-stack web apps (MERN + TypeScript)
-            </li>
-            <li class="flex items-start gap-2">
-              <span>•</span>
-              Cloud (AWS) & containerization
-            </li>
-            <li class="flex items-start gap-2">
-              <span>•</span>
-              Clean, maintainable code
-            </li>
-          </ul>
-        </div>
-        <div class="space-y-4">
-          <h3 class="font-bold text-lg flex items-center gap-2">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
-            </svg>
-            Community
-          </h3>
-          <ul class="space-y-3">
-            <li class="flex items-start gap-2">
-              <span>•</span>
-              Tech community leadership
-            </li>
-            <li class="flex items-start gap-2">
-              <span>•</span>
-              Hackathons & meetups
-            </li>
-            <li class="flex items-start gap-2">
-              <span>•</span>
-              Technical writing & blogs
-            </li>
-          </ul>
-        </div>
-      </div>
-    </section>
-
-    <!-- Interests -->
-    <section class="space-y-6">
-      <h2 class="text-3xl font-bold">
-        Beyond Tech
-      </h2>
-      <div class="flex flex-col md:flex-row gap-8 items-center">
-        <div class="md:w-2/3 space-y-5 leading-relaxed">
-          <p>
-            Outside of coding, I enjoy reading, writing blogs, and taking part in 
-            community events. I also have a sports mindset — I believe discipline, 
-            persistence, and teamwork are just as important in tech as they are in sports.
-          </p>
-          <p>
-            When I'm not at my computer, you'll find me exploring new hiking trails, 
-            reading non-fiction, or enjoying a good cup of coffee while brainstorming 
-            new project ideas.
-          </p>
-        </div>
-        <!-- <div class="md:w-1/3 flex justify-center">
-          <img 
-            src="/hobby-placeholder.jpg" 
-            alt="Hobbies" 
-            class="rounded-lg w-full h-auto max-w-xs"
-            width="300"
-            height="200"
-          />
-        </div> -->
-      </div>
-    </section>
-
+  <main class="space-y-6">
+    <h1 class="text-3xl font-extrabold tracking-tight text-[var(--text-color)]">About</h1>
     
+    <div class="prose text-lg leading-relaxed space-y-4">
+      <p>Hi, I'm Madan.</p>
+      <p>
+        I'm a Computer Engineering student interested in Machine Learning, Computer Vision, AI, Open Source, and Software Engineering.
+      </p>
+      <p>
+        This website is where I publish research, projects, technical notes, and articles.
+      </p>
+    </div>
   </main>
+
   <Footer />
-</BaseLayout>
+</Layout>

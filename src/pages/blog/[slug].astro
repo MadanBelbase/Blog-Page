@@ -1,11 +1,13 @@
 ---
-import BaseLayout from '../../layouts/BlogLayout.astro';
 import { getCollection } from 'astro:content';
 import type { CollectionEntry } from 'astro:content';
-import '../../styles/global.css';
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/shared/Header.astro';
+import Footer from '../../components/shared/Footer.astro';
+import TableOfContents from '../../components/TableOfContents.astro';
 
 export async function getStaticPaths() {
-  const posts = await getCollection('blog');
+  const posts = await getCollection('blog', ({ data }) => !data.draft);
   const sortedPosts = posts.sort((a, b) => 
     new Date(b.data.pubDate).getTime() - new Date(a.data.pubDate).getTime()
   );
@@ -27,93 +29,149 @@ interface Props {
 }
 
 const { post, nextPost, prevPost } = Astro.props;
-const { Content } = await post.render();
+const { Content, headings } = await post.render();
+
+// Reading time helper
+function getReadingTime(body: string) {
+  const wpm = 200;
+  const words = body.trim().split(/\s+/).length;
+  return `${Math.ceil(words / wpm)} min read`;
+}
+
+const formattedDate = new Date(post.data.pubDate).toLocaleDateString('en-US', {
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric'
+});
 ---
 
-<BaseLayout title={post.data.title} description={post.data.description}>
-  <div class="min-h-screen py-20">
-    <article class="max-w-3xl mx-auto px-4 sm:px-6">
-      
-      <!-- Back Button -->
-      <div class="mb-12">
-        <a href="/blog/" class="text-xs font-bold uppercase tracking-widest text-gray-400 hover:text-indigo-600 transition-colors">
-          ← Back to Archive
-        </a>
-      </div>
+<Layout 
+  title={`${post.data.title} - Madan Belbase`} 
+  description={post.data.description}
+  ogType="article"
+>
+  <Header />
 
-      <header class="mb-16">
-        <time class="text-[10px] font-bold text-indigo-500 uppercase tracking-widest mb-4 block">
-          {new Date(post.data.pubDate).toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-          })}
-        </time>
-        <h1 class="text-4xl sm:text-5xl font-extrabold text-gray-900 tracking-tight leading-tight mb-8">
-          {post.data.title}
-        </h1>
-        
-        {post.data.image && (
-          <img 
-            src={post.data.image} 
-            alt={post.data.imageAlt || post.data.title} 
-            class="w-full rounded-2xl border border-gray-100 shadow-sm object-cover aspect-video mb-8"
-          />
-        )}
-      </header>
+  <main class="space-y-6">
+    <!-- Back to Blog -->
+    <div class="mb-4">
+      <a href="/blog/" class="text-sm text-[var(--accent-color)] hover:underline">&larr; Back to Blog</a>
+    </div>
 
-      <!-- Content -->
-      <div class="prose prose-indigo prose-lg max-w-none prose-headings:text-gray-900 prose-p:text-gray-600 prose-a:text-indigo-600 prose-strong:text-gray-900">
-        <Content />
+    <!-- Article Header -->
+    <header class="space-y-3 pb-6 border-b border-[var(--border-color)]">
+      <div class="flex items-center gap-2 text-sm text-[var(--text-secondary)]">
+        <time datetime={post.data.pubDate.toString()}>{formattedDate}</time>
+        <span>&bull;</span>
+        <span>{getReadingTime(post.body)}</span>
       </div>
+      <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight text-[var(--text-color)] leading-tight font-sans">
+        {post.data.title}
+      </h1>
+      {post.data.description && (
+        <p class="text-lg text-[var(--text-secondary)] italic leading-relaxed pt-1">{post.data.description}</p>
+      )}
+    </header>
 
-      <!-- Post Navigation (Instead of TOC) -->
-      <div class="mt-24 pt-12 border-t border-gray-100 flex flex-col sm:flex-row justify-between gap-8">
-        {prevPost && (
-          <a href={`/blog/${prevPost.slug}/`} class="flex-1 group">
-            <span class="text-[10px] font-bold uppercase tracking-widest text-gray-400 group-hover:text-indigo-600 transition-colors">Previous Post</span>
-            <p class="text-lg font-bold text-gray-900 mt-2 group-hover:text-indigo-600 transition-colors">{prevPost.data.title}</p>
-          </a>
-        )}
-        {nextPost && (
-          <a href={`/blog/${nextPost.slug}/`} class="flex-1 group text-right">
-            <span class="text-[10px] font-bold uppercase tracking-widest text-gray-400 group-hover:text-indigo-600 transition-colors">Next Post</span>
-            <p class="text-lg font-bold text-gray-900 mt-2 group-hover:text-indigo-600 transition-colors">{nextPost.data.title}</p>
-          </a>
-        )}
-      </div>
+    <!-- Table of Contents (for long posts) -->
+    <TableOfContents headings={headings} />
+
+    <!-- Article Content -->
+    <article class="prose max-w-none">
+      <Content />
     </article>
-  </div>
-</BaseLayout>
 
-<style is:global>
-  .prose {
-    font-size: 1.125rem;
-    line-height: 1.8;
-  }
-  .prose h2 {
-    font-size: 1.875rem;
-    font-weight: 800;
-    margin-top: 3rem;
-    margin-bottom: 1.5rem;
-  }
-  .prose h3 {
-    font-size: 1.5rem;
-    font-weight: 700;
-    margin-top: 2rem;
-    margin-bottom: 1rem;
-  }
-  pre {
-    background: #111827 !important;
-    border-radius: 1rem !important;
-    padding: 1.5rem !important;
-    font-size: 0.875rem !important;
-    overflow-x: auto;
-  }
-  blockquote {
-    border-left: 4px solid #e0e7ff;
-    padding-left: 1.5rem;
-    font-style: italic;
-    color: #4b5563;
-  }
-</style>
+    <!-- Article Footer Navigation -->
+    <nav class="flex items-center justify-between border-t border-[var(--border-color)] pt-8 mt-12">
+      {prevPost ? (
+        <a href={`/blog/${prevPost.slug}/`} class="flex flex-col text-left group max-w-[45%]">
+          <span class="text-xs text-[var(--text-secondary)] group-hover:text-[var(--accent-color)] transition-colors">&larr; Previous</span>
+          <span class="text-sm font-semibold truncate text-[var(--text-color)] group-hover:text-[var(--accent-color)] transition-colors">{prevPost.data.title}</span>
+        </a>
+      ) : (
+        <div />
+      )}
+      
+      {nextPost ? (
+        <a href={`/blog/${nextPost.slug}/`} class="flex flex-col text-right group max-w-[45%]">
+          <span class="text-xs text-[var(--text-secondary)] group-hover:text-[var(--accent-color)] transition-colors font-sans">Next &rarr;</span>
+          <span class="text-sm font-semibold truncate text-[var(--text-color)] group-hover:text-[var(--accent-color)] transition-colors">{nextPost.data.title}</span>
+        </a>
+      ) : (
+        <div />
+      )}
+    </nav>
+  </main>
+
+  <Footer />
+
+  <!-- Code Block Utilities and Mermaid -->
+  <script>
+    // 1. Process Mermaid Diagrams
+    async function initMermaid() {
+      const codeBlocks = document.querySelectorAll('pre code.language-mermaid');
+      if (codeBlocks.length === 0) return;
+
+      // Dynamically load Mermaid.js from CDN
+      const { default: mermaid } = await import('https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs');
+      
+      const isDark = document.documentElement.classList.contains('dark');
+      mermaid.initialize({
+        startOnLoad: false,
+        theme: isDark ? 'dark' : 'default',
+        securityLevel: 'loose',
+      });
+
+      for (const codeEl of Array.from(codeBlocks)) {
+        const preEl = codeEl.parentElement;
+        if (!preEl) continue;
+        
+        const div = document.createElement('div');
+        div.className = 'mermaid my-6 flex justify-center';
+        div.textContent = codeEl.textContent;
+        preEl.replaceWith(div);
+      }
+
+      await mermaid.run();
+    }
+
+    // 2. Setup Copy to Clipboard Buttons
+    function setupCopyButtons() {
+      document.querySelectorAll('pre').forEach((pre) => {
+        // Skip mermaid
+        if (pre.querySelector('code.language-mermaid')) return;
+        // Don't add button if it already exists
+        if (pre.querySelector('.copy-code-button')) return;
+
+        const button = document.createElement('button');
+        button.className = 'copy-code-button';
+        button.type = 'button';
+        button.innerText = 'Copy';
+
+        pre.appendChild(button);
+
+        button.addEventListener('click', () => {
+          const code = pre.querySelector('code');
+          const text = code ? code.innerText : pre.innerText;
+
+          navigator.clipboard.writeText(text).then(() => {
+            button.innerText = 'Copied!';
+            setTimeout(() => {
+              button.innerText = 'Copy';
+            }, 2000);
+          });
+        });
+      });
+    }
+
+    // Run setup
+    initMermaid();
+    setupCopyButtons();
+
+    // Re-run setup on View Transitions (if using astro:after-swap)
+    document.addEventListener('astro:after-swap', () => {
+      initMermaid();
+      setupCopyButtons();
+    });
+  </script>
+</Layout>

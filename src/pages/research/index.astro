@@ -1,0 +1,127 @@
+---
+import { getCollection } from 'astro:content';
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/shared/Header.astro';
+import Footer from '../../components/shared/Footer.astro';
+
+const researchItems = await getCollection('research');
+const sortedItems = researchItems.sort((a, b) => 
+  new Date(b.data.pubDate).getTime() - new Date(a.data.pubDate).getTime()
+);
+
+const papers = sortedItems.filter(item => item.data.type === 'paper' || item.data.type === 'summary');
+const experiments = sortedItems.filter(item => item.data.type === 'experiment' || item.data.type === 'replication');
+const others = sortedItems.filter(item => item.data.type === 'idea' || item.data.type === 'dataset' || item.data.type === 'benchmark');
+const readingList = sortedItems.filter(item => item.data.type === 'reading-list');
+---
+
+<Layout title="Research - Madan Belbase" description="Machine Learning and AI research notes, papers, experiments, and reading list.">
+  <Header />
+
+  <main class="space-y-10">
+    <div class="border-b border-[var(--border-color)] pb-4">
+      <h1 class="text-3xl font-extrabold tracking-tight text-[var(--text-color)]">Research</h1>
+      <p class="text-[var(--text-secondary)] mt-2 text-lg">Machine Learning experiments, paper summaries, benchmarks, and active reading list.</p>
+    </div>
+
+    <!-- Papers and Summaries -->
+    {papers.length > 0 && (
+      <section class="space-y-4">
+        <h2 class="text-xl font-bold tracking-tight border-b border-[var(--border-color)] pb-1 text-[var(--text-color)]">
+          Papers & Summaries
+        </h2>
+        <ul class="space-y-4 list-none pl-0">
+          {papers.map(item => (
+            <li>
+              <div class="flex flex-col sm:flex-row sm:items-baseline sm:justify-between gap-1">
+                <span class="text-base font-semibold text-[var(--text-color)]">
+                  {item.data.title}
+                  {item.data.venue && <span class="text-xs text-[var(--text-secondary)] font-normal ml-1">({item.data.venue})</span>}
+                </span>
+                <div class="flex gap-3 text-xs shrink-0">
+                  {item.data.paperUrl && <a href={item.data.paperUrl} target="_blank" rel="noopener noreferrer" class="text-[var(--accent-color)] hover:underline font-medium font-sans">Paper</a>}
+                  {item.data.githubUrl && <a href={item.data.githubUrl} target="_blank" rel="noopener noreferrer" class="text-[var(--accent-color)] hover:underline font-medium font-sans">GitHub</a>}
+                </div>
+              </div>
+              <p class="text-sm text-[var(--text-secondary)] mt-1">{item.data.description}</p>
+            </li>
+          ))}
+        </ul>
+      </section>
+    )}
+
+    <!-- Experiments & Replications -->
+    {experiments.length > 0 && (
+      <section class="space-y-4">
+        <h2 class="text-xl font-bold tracking-tight border-b border-[var(--border-color)] pb-1 text-[var(--text-color)]">
+          Experiments & Replications
+        </h2>
+        <ul class="space-y-4 list-none pl-0">
+          {experiments.map(item => (
+            <li>
+              <div class="flex flex-col sm:flex-row sm:items-baseline sm:justify-between gap-1">
+                <span class="text-base font-semibold text-[var(--text-color)]">
+                  {item.data.title}
+                </span>
+                <div class="flex gap-3 text-xs shrink-0">
+                  {item.data.githubUrl && <a href={item.data.githubUrl} target="_blank" rel="noopener noreferrer" class="text-[var(--accent-color)] hover:underline font-medium font-sans">Code</a>}
+                  {item.data.demoUrl && <a href={item.data.demoUrl} target="_blank" rel="noopener noreferrer" class="text-[var(--accent-color)] hover:underline font-medium font-sans">Demo</a>}
+                </div>
+              </div>
+              <p class="text-sm text-[var(--text-secondary)] mt-1">{item.data.description}</p>
+            </li>
+          ))}
+        </ul>
+      </section>
+    )}
+
+    <!-- Ideas, Datasets & Benchmarks -->
+    {others.length > 0 && (
+      <section class="space-y-4">
+        <h2 class="text-xl font-bold tracking-tight border-b border-[var(--border-color)] pb-1 text-[var(--text-color)]">
+          Datasets, Benchmarks & Ideas
+        </h2>
+        <ul class="space-y-4 list-none pl-0">
+          {others.map(item => (
+            <li>
+              <div class="flex flex-col sm:flex-row sm:items-baseline sm:justify-between gap-1">
+                <span class="text-base font-semibold text-[var(--text-color)]">
+                  {item.data.title}
+                </span>
+                <div class="flex gap-3 text-xs shrink-0">
+                  {item.data.demoUrl && <a href={item.data.demoUrl} target="_blank" rel="noopener noreferrer" class="text-[var(--accent-color)] hover:underline font-medium font-sans">Link</a>}
+                </div>
+              </div>
+              <p class="text-sm text-[var(--text-secondary)] mt-1">{item.data.description}</p>
+            </li>
+          ))}
+        </ul>
+      </section>
+    )}
+
+    <!-- Reading List -->
+    {readingList.length > 0 && (
+      <section class="space-y-4">
+        <h2 class="text-xl font-bold tracking-tight border-b border-[var(--border-color)] pb-1 text-[var(--text-color)] font-sans">
+          Reading List
+        </h2>
+        <ul class="space-y-2 list-none pl-0 text-sm text-[var(--text-secondary)]">
+          {readingList.map(item => (
+            <li class="flex items-baseline gap-2">
+              <span class="text-[var(--text-color)] font-medium">&#x25aa;</span>
+              <div>
+                <span class="text-[var(--text-color)] font-medium">{item.data.title}</span>
+                {item.data.description && <span class="text-[var(--text-secondary)]"> — {item.data.description}</span>}
+                {item.data.paperUrl && (
+                  <a href={item.data.paperUrl} target="_blank" rel="noopener noreferrer" class="text-xs text-[var(--accent-color)] ml-2 hover:underline">Link</a>
+                )}
+              </div>
+            </li>
+          ))}
+        </ul>
+      </section>
+    )}
+  </main>
+
+  <Footer />
+</Layout>

@@ -1,12 +1,11 @@
 ---
 import { getCollection } from 'astro:content';
-import type { CollectionEntry } from 'astro:content';
-import BaseLayout from '../../../layouts/BlogLayout.astro';
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/shared/Header.astro';
+import Footer from '../../../components/shared/Footer.astro';
 
 export async function getStaticPaths() {
-  const posts = await getCollection('blog');
-
-  // Collect all unique tags (case-insensitive)
+  const posts = await getCollection('blog', ({ data }) => !data.draft);
   const allTags = new Set<string>();
   posts.forEach((post) => {
     (post.data.tags ?? []).forEach((tag) => allTags.add(tag.toLowerCase()));
@@ -18,194 +17,62 @@ export async function getStaticPaths() {
 }
 
 const { tag } = Astro.params;
-const posts = await getCollection('blog');
+const posts = await getCollection('blog', ({ data }) => !data.draft);
 
-// Case-insensitive tag filtering
 const filteredPosts = posts
   .filter((post) => post.data.tags?.map((t) => t.toLowerCase()).includes(tag.toLowerCase()))
   .sort((a, b) => new Date(b.data.pubDate).getTime() - new Date(a.data.pubDate).getTime());
 
-const getRelativeTime = (date: string | Date): string => {
-  try {
-    const currentDate = new Date();
-    const diffMs = currentDate.getTime() - new Date(date).getTime();
-    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-    if (diffDays === 0) return 'Today';
-    if (diffDays === 1) return 'Yesterday';
-    if (diffDays < 7) return `${diffDays} days ago`;
-    return new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric' }).format(new Date(date));
-  } catch {
-    return 'Unknown date';
-  }
-};
+// Reading time helper
+function getReadingTime(body: string) {
+  const wpm = 200;
+  const words = body.trim().split(/\s+/).length;
+  return `${Math.ceil(words / wpm)} min read`;
+}
 ---
 
-<BaseLayout title={`Posts tagged with "${tag}"`} description={`Explore all blog posts related to ${tag} on Madan's Blog.`}>
-  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2935284525797601"
-     crossorigin="anonymous"></script>
-  
-  <div class="min-h-screen ">
-    <div class="max-w-5xl mx-auto px-4 sm:px-6 py-12">
-      
-      <!-- Header -->
-      <div class="mb-12">
-        <a
-          href="/blog"
-          class="inline-flex items-center gap-2 text-gray-600 hover:text-blue-600 mb-6 transition-colors duration-200 focus:outline-none"
-          aria-label="Back to all posts"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-          </svg>
-          Back to all posts
-        </a>
-        
-        <div class="flex items-center gap-4 mb-3">
-          <div class="w-12 h-12 rounded-xl bg-blue-600 flex items-center justify-center shadow-lg">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-            </svg>
-          </div>
-          <div>
-            <h1 class="text-3xl sm:text-4xl font-bold text-gray-900 capitalize">
-              {tag}
-            </h1>
-            <p class="text-gray-600 mt-1">
-              {filteredPosts.length} {filteredPosts.length === 1 ? 'article' : 'articles'}
-            </p>
-          </div>
-        </div>
+<Layout title={`Posts tagged with #${tag} - Madan Belbase`} description={`Explore all blog posts tagged with #${tag}`}>
+  <Header />
+
+  <main class="space-y-10">
+    <div class="border-b border-[var(--border-color)] pb-4">
+      <div class="flex items-center gap-2">
+        <a href="/blog/" class="text-sm text-[var(--accent-color)] hover:underline font-sans">&larr; Back to Blog</a>
       </div>
-
-      <!-- No posts message -->
-      {filteredPosts.length === 0 && (
-        <div class="bg-white rounded-xl border border-gray-200 p-12 text-center">
-          <div class="w-16 h-16 mx-auto bg-gray-100 rounded-full flex items-center justify-center mb-4">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          </div>
-          <h2 class="text-xl font-bold text-gray-900 mb-2">No posts found</h2>
-          <p class="text-gray-600 mb-6">There are no articles with this tag yet.</p>
-          <a
-            href="/blog"
-            class="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors duration-200 focus:outline-none"
-            aria-label="Browse all blog posts"
-          >
-            Browse all articles
-          </a>
-        </div>
-      )}
-
-      <!-- Posts list -->
-      {filteredPosts.length > 0 && (
-        <div class="space-y-6">
-          {filteredPosts.map((post) => (
-            <article
-              class="bg-white p-6 sm:p-8 rounded-xl border border-gray-200 shadow-sm hover:shadow-md hover:border-blue-200 transition-all duration-200"
-              aria-labelledby={`post-title-${post.slug}`}
-            >
-              <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-3">
-                <h2 id={`post-title-${post.slug}`} class="text-xl sm:text-2xl font-bold text-gray-900 leading-tight">
-                  <a href={`/blog/${post.slug}/`} class="hover:text-blue-600 transition-colors duration-200">
-                    {post.data.title}
-                  </a>
-                </h2>
-                <time class="text-sm text-gray-500 whitespace-nowrap font-medium" datetime={post.data.pubDate.toISOString()}>
-                  {getRelativeTime(post.data.pubDate)}
-                </time>
-              </div>
-
-              {post.data.description && (
-                <p class="text-gray-600 text-base mb-4 leading-relaxed">
-                  {post.data.description}
-                </p>
-              )}
-
-              <div class="flex items-center justify-between flex-wrap gap-3">
-                <a
-                  href={`/blog/${post.slug}/`}
-                  class="inline-flex items-center gap-1.5 text-blue-600 font-semibold focus:outline-none"
-                  aria-label={`Read more about ${post.data.title}`}
-                >
-                  Read article <span aria-hidden="true">→</span>
-                </a>
-
-                {post.data.tags && post.data.tags.length > 0 && (
-                  <div class="flex items-center gap-2 flex-wrap">
-                    {post.data.tags.slice(0, 3).map((t) => (
-                      <span
-                        class={`text-xs font-semibold px-3 py-1 rounded-full ${
-                          t.toLowerCase() === tag.toLowerCase()
-                            ? 'bg-blue-600 text-white'
-                            : 'bg-gray-100 text-gray-700'
-                        }`}
-                      >
-                        {t}
-                      </span>
-                    ))}
-                    {post.data.tags.length > 3 && (
-                      <span class="text-xs font-medium text-gray-500">
-                        +{post.data.tags.length - 3} more
-                      </span>
-                    )}
-                  </div>
-                )}
-              </div>
-            </article>
-          ))}
-        </div>
-      )}
+      <h1 class="text-3xl font-extrabold tracking-tight text-[var(--text-color)] mt-3 font-sans">
+        Tag: #{tag}
+      </h1>
+      <p class="text-[var(--text-secondary)] mt-1 font-sans">
+        {filteredPosts.length} {filteredPosts.length === 1 ? 'article' : 'articles'} found
+      </p>
     </div>
-  </div>
-</BaseLayout>
 
-<style is:global>
-  /* Fonts */
-  body {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-    color: #1e293b;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-  }
+    <!-- Blog Posts List -->
+    <div class="space-y-10">
+      {filteredPosts.map(post => {
+        const formattedDate = new Date(post.data.pubDate).toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'short',
+          day: 'numeric'
+        });
+        return (
+          <article class="space-y-2">
+            <div class="flex items-center gap-2 text-sm text-[var(--text-secondary)]">
+              <time datetime={post.data.pubDate.toString()}>{formattedDate}</time>
+              <span>&bull;</span>
+              <span>{getReadingTime(post.body)}</span>
+            </div>
+            
+            <h2 class="text-xl font-bold tracking-tight font-sans">
+              <a href={`/blog/${post.slug}/`} class="list-link">{post.data.title}</a>
+            </h2>
+            
+            <p class="text-[var(--text-secondary)] leading-relaxed mt-1 text-sm">{post.data.description}</p>
+          </article>
+        );
+      })}
+    </div>
+  </main>
 
-  html {
-    scroll-behavior: smooth;
-  }
-
-  /* Clean focus styles */
-  a:focus {
-    outline: none;
-  }
-
-  a:focus-visible {
-    outline: 2px solid #3b82f6;
-    outline-offset: 2px;
-    border-radius: 4px;
-  }
-
-  /* Remove tap highlight on mobile */
-  * {
-    -webkit-tap-highlight-color: transparent;
-  }
-
-  /* Responsive adjustments */
-  @media (max-width: 640px) {
-    .text-3xl {
-      font-size: 1.875rem;
-    }
-    .text-4xl {
-      font-size: 2.25rem;
-    }
-  }
-
-  /* Accessibility */
-  @media (prefers-reduced-motion: reduce) {
-    *,
-    *::before,
-    *::after {
-      animation-duration: 0.01ms !important;
-      transition-duration: 0.01ms !important;
-    }
-  }
-</style>
+  <Footer />
+</Layout>

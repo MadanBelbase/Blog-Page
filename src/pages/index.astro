@@ -1,15 +1,148 @@
 ---
-import Welcome from '../components/Welcome.astro';
 import Layout from '../layouts/Layout.astro';
-import Header from '../components/shared/Header.astro'
-import Footer from '../components/shared/Footer.astro'
+import Header from '../components/shared/Header.astro';
+import Footer from '../components/shared/Footer.astro';
+import { getCollection } from 'astro:content';
 
+// Get recent blog posts (not drafts) sorted by date
+const blogs = await getCollection('blog', ({ data }) => !data.draft);
+const sortedBlogs = blogs
+  .sort((a, b) => new Date(b.data.pubDate).getTime() - new Date(a.data.pubDate).getTime())
+  .slice(0, 3); // Get latest 3
+
+// Get recent notes (not drafts) sorted by date
+const notes = await getCollection('notes', ({ data }) => !data.draft);
+const sortedNotes = notes
+  .sort((a, b) => new Date(b.data.pubDate).getTime() - new Date(a.data.pubDate).getTime())
+  .slice(0, 3); // Get latest 3
+
+// Get featured projects sorted by order
+const projects = await getCollection('projects');
+const featuredProjects = projects
+  .filter(p => p.data.featured)
+  .sort((a, b) => (a.data.order || 99) - (b.data.order || 99))
+  .slice(0, 3); // Get top 3
 ---
 
-<Layout>
-	<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2935284525797601"
-     crossorigin="anonymous" defer></script>
-	<Header/>
-	<Welcome />
-	<Footer/>
+<Layout title="Madan Belbase">
+  <Header />
+
+  <main class="space-y-12">
+    <!-- Bio Summary -->
+    <section class="space-y-2">
+      <h1 class="text-3xl font-extrabold tracking-tight text-[var(--text-color)] font-sans">Madan Belbase</h1>
+      <p class="text-[var(--text-secondary)] text-lg leading-relaxed">
+        Computer Engineering student interested in Machine Learning, Computer Vision, AI, and Software Engineering.
+      </p>
+    </section>
+
+    <!-- Recent Articles -->
+    {sortedBlogs.length > 0 && (
+      <section class="space-y-4">
+        <div class="flex items-center justify-between border-b border-[var(--border-color)] pb-2">
+          <h2 class="text-xl font-bold tracking-tight text-[var(--text-color)]">Recent Articles</h2>
+          <a href="/blog/" class="text-sm text-[var(--accent-color)] hover:underline">View all &rarr;</a>
+        </div>
+        <ul class="space-y-4 list-none pl-0">
+          {sortedBlogs.map(post => {
+            const formattedDate = new Date(post.data.pubDate).toLocaleDateString('en-US', {
+              year: 'numeric',
+              month: 'short',
+              day: 'numeric'
+            });
+            return (
+              <li>
+                <div class="flex flex-col sm:flex-row sm:items-baseline sm:justify-between gap-1">
+                  <a href={`/blog/${post.slug}/`} class="text-base font-medium list-link">
+                    {post.data.title}
+                  </a>
+                  <time class="text-sm text-[var(--text-secondary)] shrink-0">{formattedDate}</time>
+                </div>
+                {post.data.description && (
+                  <p class="text-sm text-[var(--text-secondary)] mt-1">{post.data.description}</p>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      </section>
+    )}
+
+    <!-- Recent Notes -->
+    {sortedNotes.length > 0 && (
+      <section class="space-y-4">
+        <div class="flex items-center justify-between border-b border-[var(--border-color)] pb-2">
+          <h2 class="text-xl font-bold tracking-tight text-[var(--text-color)]">Recent Notes</h2>
+          <a href="/notes/" class="text-sm text-[var(--accent-color)] hover:underline">View all &rarr;</a>
+        </div>
+        <ul class="space-y-4 list-none pl-0">
+          {sortedNotes.map(note => {
+            const formattedDate = new Date(note.data.pubDate).toLocaleDateString('en-US', {
+              year: 'numeric',
+              month: 'short',
+              day: 'numeric'
+            });
+            return (
+              <li>
+                <div class="flex flex-col sm:flex-row sm:items-baseline sm:justify-between gap-1">
+                  <a href={`/notes/${note.slug}/`} class="text-base font-medium list-link">
+                    {note.data.title}
+                  </a>
+                  <time class="text-sm text-[var(--text-secondary)] shrink-0">{formattedDate}</time>
+                </div>
+                {note.data.topics && note.data.topics.length > 0 && (
+                  <div class="flex flex-wrap gap-1.5 mt-1.5">
+                    {note.data.topics.map(topic => (
+                      <span class="text-xs bg-[var(--code-bg)] text-[var(--text-secondary)] px-1.5 py-0.5 rounded border border-[var(--border-color)]">
+                        {topic}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      </section>
+    )}
+
+    <!-- Featured Projects -->
+    {featuredProjects.length > 0 && (
+      <section class="space-y-4">
+        <div class="flex items-center justify-between border-b border-[var(--border-color)] pb-2">
+          <h2 class="text-xl font-bold tracking-tight text-[var(--text-color)]">Featured Projects</h2>
+          <a href="/projects/" class="text-sm text-[var(--accent-color)] hover:underline">View all &rarr;</a>
+        </div>
+        <ul class="space-y-4 list-none pl-0">
+          {featuredProjects.map(project => (
+            <li>
+              <div class="flex flex-col sm:flex-row sm:items-baseline sm:justify-between gap-1">
+                <span class="text-base font-medium text-[var(--text-color)]">
+                  {project.data.name}
+                  {project.data.githubLink && (
+                    <a href={project.data.githubLink} target="_blank" rel="noopener noreferrer" class="text-xs text-[var(--accent-color)] ml-2 hover:underline">GitHub</a>
+                  )}
+                  {project.data.liveDemo && (
+                    <a href={project.data.liveDemo} target="_blank" rel="noopener noreferrer" class="text-xs text-[var(--accent-color)] ml-2 hover:underline">Live Demo</a>
+                  )}
+                </span>
+                <span class="text-xs font-semibold px-2 py-0.5 rounded-full border bg-[var(--code-bg)] text-[var(--text-secondary)] border-[var(--border-color)] shrink-0">
+                  {project.data.status}
+                </span>
+              </div>
+              <p class="text-sm text-[var(--text-secondary)] mt-1">{project.data.description}</p>
+              {project.data.techStack && (
+                <div class="flex flex-wrap gap-1 mt-2 text-xs text-[var(--text-secondary)]">
+                  <span class="font-medium">Stack:</span>
+                  <span class="ml-1">{project.data.techStack.join(', ')}</span>
+                </div>
+              )}
+            </li>
+          ))}
+        </ul>
+      </section>
+    )}
+  </main>
+
+  <Footer />
 </Layout>

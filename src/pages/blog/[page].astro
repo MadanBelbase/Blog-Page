@@ -1,0 +1,102 @@
+---
+import { getCollection } from 'astro:content';
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/shared/Header.astro';
+import Footer from '../../components/shared/Footer.astro';
+
+export async function getStaticPaths({ paginate }) {
+  const posts = await getCollection('blog', ({ data }) => !data.draft);
+  const sortedPosts = posts.sort((a, b) => 
+    new Date(b.data.pubDate).getTime() - new Date(a.data.pubDate).getTime()
+  );
+  return paginate(sortedPosts, { pageSize: 5 });
+}
+
+const { page } = Astro.props;
+const { data: pagePosts } = page;
+
+// Reading time helper
+function getReadingTime(body: string) {
+  const wpm = 200;
+  const words = body.trim().split(/\s+/).length;
+  return `${Math.ceil(words / wpm)} min read`;
+}
+---
+
+<Layout title={`Blog - Page ${page.currentPage} - Madan Belbase`} description="Writing and essays on Machine Learning, Computer Vision, software, and technology.">
+  <Header />
+
+  <main class="space-y-10">
+    <div class="border-b border-[var(--border-color)] pb-4">
+      <h1 class="text-3xl font-extrabold tracking-tight text-[var(--text-color)]">Blog</h1>
+      <p class="text-[var(--text-secondary)] mt-2 text-lg">Writing, guides, and technical essays.</p>
+    </div>
+
+    <!-- Blog Posts List -->
+    <div class="space-y-12">
+      {pagePosts.map(post => {
+        const formattedDate = new Date(post.data.pubDate).toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'short',
+          day: 'numeric'
+        });
+        const readingTime = getReadingTime(post.body);
+        return (
+          <article class="space-y-2">
+            <div class="flex items-center gap-2 text-sm text-[var(--text-secondary)]">
+              <time datetime={post.data.pubDate.toString()}>{formattedDate}</time>
+              <span>&bull;</span>
+              <span>{readingTime}</span>
+            </div>
+            
+            <h2 class="text-2xl font-bold tracking-tight">
+              <a href={`/blog/${post.slug}/`} class="list-link">{post.data.title}</a>
+            </h2>
+            
+            <p class="text-[var(--text-secondary)] leading-relaxed mt-1 text-sm">{post.data.description}</p>
+            
+            <div class="flex flex-wrap gap-2 pt-2">
+              {post.data.categories && post.data.categories.map(cat => (
+                <span class="text-xs bg-[var(--code-bg)] text-[var(--text-secondary)] px-2 py-0.5 rounded border border-[var(--border-color)]">
+                  {cat}
+                </span>
+              ))}
+              {post.data.tags && post.data.tags.map(tag => (
+                <span class="text-xs bg-[var(--code-bg)] text-[var(--text-secondary)] px-2 py-0.5 rounded border border-[var(--border-color)] italic">
+                  #{tag}
+                </span>
+              ))}
+            </div>
+          </article>
+        );
+      })}
+    </div>
+
+    <!-- Pagination -->
+    <nav class="flex items-center justify-between border-t border-[var(--border-color)] pt-6">
+      <span class="text-sm text-[var(--text-secondary)]">
+        Page {page.currentPage} of {page.lastPage}
+      </span>
+      <div class="flex gap-4">
+        {page.url.prev && (
+          <a
+            href={page.url.prev === '/blog' ? '/blog/' : page.url.prev}
+            class="text-sm font-medium text-[var(--accent-color)] hover:underline"
+          >
+            &larr; Prev Page
+          </a>
+        )}
+        {page.url.next && (
+          <a
+            href={page.url.next}
+            class="text-sm font-medium text-[var(--accent-color)] hover:underline"
+          >
+            Next Page &rarr;
+          </a>
+        )}
+      </div>
+    </nav>
+  </main>
+
+  <Footer />
+</Layout>
