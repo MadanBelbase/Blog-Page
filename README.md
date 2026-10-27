@@ -2,7 +2,7 @@
 
 A professional, minimal, and high-performance personal portfolio and blog built with **Astro 5** and **Tailwind CSS 4**.
 
-[Live Demo](https://madanbelbase.com.np)
+[Live Demo](https:/blog./madanbelbase.com.np)
 
 ## ✨ Features
 
