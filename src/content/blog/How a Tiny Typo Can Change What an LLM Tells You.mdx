@@ -1,0 +1,135 @@
+
+---
+title: "How a Tiny Typo Can Change What an LLM Tells You"
+description: "A deep dive into how small errors in prompts can lead to significant differences in responses from large language models."
+pubDate: "2026-10-27"
+tags: ["LLM", "Machine Learning", "AI"]
+---
+import BlogImage from "../../components/BlogImage.astro";
+import Img1 from "../../assets/blog/Tiny Typo /correct sentence with token.png"
+import Img2 from "../../assets/blog/Tiny Typo /typo mistake sentence.png"
+
+
+While working with an LLM, I accidentally typed “misyke” instead of “mistake” and added a stray space in “effe ct.” The model understood me perfectly and answered as if I had typed everything correctly. That is exactly why most people never think about typos when using ChatGPT, Claude, Gemini, or any other large language model (LLM).
+
+But “it usually works” is not the same as “it always works.” Over the last few years, researchers have tested what happens when prompts contain small, realistic errors, and the results are more interesting than either “typos don’t matter” or “typos ruin everything.” This post walks through what the research says, where typos really do change the outcome, and what you can do about it.
+
+## Why a typo can matter at all: how LLMs read text
+
+We read words, but LLMs process tokens. Before our prompt reaches the model, a tokenizer splits it into tokens, which may be whole words for common vocabulary items or smaller fragments for less common strings. The model then works with these tokens.
+
+A correctly spelled, common word is often represented by a single token that the model has encountered many times during training. A misspelled version, however, may be broken into several smaller, less common pieces. The model must use context to infer that this unusual sequence represents the word you intended.
+
+Usually, it succeeds because its training data contains many examples of misspellings. Sometimes, however, it fails, interprets the sequence as a different word, or handles the altered input differently, potentially affecting its performance on the actual task.
+
+<BlogImage src={Img1} alt="Tokenization of a correctly spelled sentence" width={800} />
+<BlogImage src={Img2} alt="Tokenization of a sentence containing typographical errors" width={800} />
+
+There are four basic ways a typographical error can occur, forming a classification commonly used in research on spelling errors: **substitution** (replacing a letter), **insertion** (adding an extra letter), **deletion** (removing a letter), and **transposition** (swapping two adjacent letters). Keyboard layouts can make some errors more likely than others, a factor that becomes particularly important when studying typos across different languages.
+
+## What the research says
+
+### Prompts are fragile in a systematic way
+
+A widely cited 2023 study, PromptBench (also called PromptRobust), set out to measure this properly. The team generated 4,788 adversarial prompts and tested them across 8 tasks and 13 datasets. They attacked prompts at four levels: character, word, sentence, and meaning. Their conclusion was that the LLMs they tested were not robust to these perturbations, and the word-level attacks did the most damage.
+
+One point from that paper deserves more attention than it gets. In real applications, a single prompt is typically reused across many inputs. A typo in that shared prompt does not cost you one bad answer. It can cost you a bad answer on every input that flows through it.
+
+### One character can move accuracy
+
+The most striking evidence for the “small typo, real effect” claim comes from a 2024 paper by Gan and colleagues, presented at EMNLP, titled “Reasoning Robustness of LLMs to Adversarial Typographical Errors.” They built an attack that picks which words to corrupt and how, using only realistic error types such as doubled letters, omitted letters, and extra spaces, so the text still looks natural.
+
+The numbers on a math-reasoning benchmark (GSM8K) with a 7B-parameter open model, Mistral-7B-Instruct:
+
+| Character edits | Accuracy |
+|---|---|
+| 0 (clean) | 43.7% |
+| 1 | 38.6% |
+| 8 | 19.2% |
+
+The team then packaged the typo-laden questions as a benchmark called R2ATA and tested them on larger models, including ChatGPT. The damage transferred, though it was smaller: on average, ChatGPT dropped about 6.5% and Mixtral-8x7B about 6.7% across tasks.
+
+### It is not only an English problem
+
+A 2025 study on multilingual typos ([arXiv 2510.09536](https://arxiv.org/abs/2510.09536)) tested how models cope when users make mistakes in other languages. It built typo generators around language-specific keyboard layouts so the errors resemble what real people would type. Several of its findings run against common assumptions:
+
+- Model size does not guarantee robustness. Both small and large models lost accuracy under typos.
+- Instruction tuning may make a model more vulnerable under noisy input.
+- Giving more few-shot examples in the prompt did not make models more robust to typos.
+
+### What actually helps
+
+One study on multi-hop reasoning ([arXiv 2311.00258](https://arxiv.org/abs/2311.00258)) found that increasing the share of perturbed examples in a few-shot prompt improved robustness. In plain terms, showing the model messy examples helps it handle messy input. Another large-scale comparison, “When Punctuation Matters,” evaluated five methods for making prompts more robust and extended its tests to newer models such as GPT-4.1 and DeepSeek V3, which is a useful sign that the problem has not simply disappeared as models improved.
+
+## The important caveat: random typos vs. adversarial typos
+
+This is the part many articles on this topic skip, and it is the part that keeps a post like this honest.
+
+The strongest numbers above come from adversarial typos. An algorithm tries many candidate edits and keeps the ones most likely to break the model. That is a worst-case scenario. When you accidentally type “teh” or hit a neighboring key, your error is essentially random. Random typos are far less likely to land on the one word the model’s reasoning hinges on.
+
+So the fair reading of the research is not “typos wreck your results.” It is closer to this: LLMs have a measurable weakness to small character-level changes, the weakness is real and worth designing around, and everyday typos mostly fall well short of the worst case. Anyone who tells you otherwise is overselling or underselling.
+
+## When typos are most likely to matter
+
+Based on the research and on how models work, these are the situations where I would pay attention:
+
+1. **Reasoning and math problems.** Multi-step tasks give an early misreading room to snowball. The Gan et al. results focus on reasoning benchmarks for this reason.
+2. **Numbers, names, and technical terms.** A typo in “2019” versus “2091,” or in a library name, can change the question itself rather than just its wording.
+3. **Code identifiers.** Variable and function names are exact strings. A near-miss may be treated as a different identifier.
+4. **Long prompts with many constraints.** The more instructions you stack, the more likely one garbled requirement is quietly dropped.
+5. **Words that turn into other valid words.** Spell-checkers miss these, and so can models, because the result is still a real word.
+6. **Reused prompts in apps.** As noted above, a single flaw gets multiplied across every user.
+7. **Non-English prompts**, where models often have less training data and typo patterns differ.
+
+By contrast, a chatty, short request like “whats a good way to lern spanish” is almost always fine.
+
+## Typos are one kind of prompt fragility
+
+It helps to see typos as one member of a larger family. Research on prompt sensitivity has shown that changes with no change in meaning, such as different spacing, separators, punctuation, capitalization, option order in multiple-choice questions, or swapping a word for a synonym, can also move results. A well-known paper by Sclar and colleagues showed that formatting choices alone can swing a model’s measured performance substantially. If your goal is stable results, typos are a good entry point, but they are not the whole story.
+
+This is also an old problem. Years before modern LLMs, researchers showed that machine translation systems broke on both synthetic and naturally occurring noisy input. What is new is how many people now depend on these systems daily, and how much text they type quickly on phones.
+
+## The security angle
+
+Character-level noise has a darker use. Researchers studying jailbreaks have found that random-looking perturbations, such as scrambled letters or odd capitalization, can sometimes slip a harmful request past safety training when many variations are tried. The idea is that safety behavior was learned on typical, clean phrasing, and unusual text may fall outside what it covers. For everyday users this is not a reason to worry, but for anyone who builds or evaluates AI systems it is another reason robustness to messy input matters.
+
+## Typos beyond the chat box: documents and RAG
+
+If you use retrieval-augmented generation (RAG), where an LLM answers using documents fetched from a database, typos can show up in two places: the user’s question and the documents themselves. Scanned PDFs, OCR output, and user-generated content are full of errors. A typo in either place can change what gets retrieved, which changes what the model sees before it answers. If you build these systems, test with noisy text, not only clean samples.
+
+
+## What to do about it
+
+For everyday users, the advice is simple and low-effort:
+
+- Do not stress about casual typos in casual chat.
+- Proofread the parts that carry the meaning: numbers, names, technical terms, and constraints.
+- If an answer looks oddly off, fix any typos and ask again before concluding the model is wrong.
+- For long prompts, re-read your list of requirements once before sending.
+
+For people building with LLMs:
+
+- Treat system prompts and templates like code: proofread and version them, because errors are multiplied across users.
+- Test your app with noisy input, not just clean examples.
+- Consider including a few imperfect examples in few-shot prompts, since there is evidence this improves robustness.
+- For high-stakes steps, add a normalization or rewriting step that cleans user input before the main task.
+- Run each important prompt several times when evaluating it, so you are not fooled by luck.
+
+## Conclusion
+
+The honest answer to “do typos affect LLM results?” is: sometimes, and the research tells us roughly when. Modern models are impressively tolerant of everyday mistakes, which is why my own garbled message worked fine. But the tolerance is not unlimited. Small character-level changes can reduce accuracy on reasoning tasks, the weakness shows up across model sizes and languages, and it matters most where a prompt is reused at scale or a single word carries the whole meaning.
+
+So you do not need to be a perfect typist. You just need to know which parts of a prompt are worth a second look.
+
+## References
+
+1. Zhu, K., Wang, J., et al. (2023). *PromptBench: Towards Evaluating the Robustness of Large Language Models on Adversarial Prompts* (also released as PromptRobust). [arXiv:2306.04528](https://arxiv.org/abs/2306.04528).
+2. Gan, E., Zhao, Y., Cheng, L., Mao, Y., Goyal, A., Kawaguchi, K., Kan, M.-Y., Shieh, M. (2024). *Reasoning Robustness of LLMs to Adversarial Typographical Errors*. EMNLP 2024, pp. 10449-10459. [arXiv:2411.05345](https://arxiv.org/abs/2411.05345).
+3. Multilingual typographical-error robustness study (2025). [arXiv:2510.09536](https://arxiv.org/abs/2510.09536).
+4. Few-shot robustness in multi-hop reasoning with perturbed exemplars. [arXiv:2311.00258](https://arxiv.org/abs/2311.00258).
+5. *When Punctuation Matters: A Large-Scale Comparison of Prompt Robustness Methods for LLMs*.
+6. Sclar, M., et al. *Quantifying Language Models’ Sensitivity to Spurious Features in Prompt Design or: How I learned to start worrying about prompt formatting*.
+7. Belinkov, Y. and Bisk, Y. (2018). *Synthetic and Natural Noise Both Break Neural Machine Translation*.
+8. Ribeiro, M. T., et al. (2020). *Beyond Accuracy: Behavioral Testing of NLP Models with CheckList*.
+9. Hughes, J., et al. (2024). *Best-of-N Jailbreaking*.
+10. Wei, A., Haghtalab, N., Steinhardt, J. (2023). *Jailbroken: How Does LLM Safety Training Fail?*
